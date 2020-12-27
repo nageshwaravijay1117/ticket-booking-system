@@ -8,10 +8,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
 @Component
 public class InterceptorAppConfig extends WebMvcConfigurationSupport {
 	@Autowired
-	AuthorizationInterceptor authorizationInterceptor;
+	private AuthorizationInterceptor authorizationInterceptor;
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(authorizationInterceptor).addPathPatterns("/admin/**");
+		registry.addInterceptor(authorizationInterceptor).addPathPatterns("/booking/**");
 	}
 }

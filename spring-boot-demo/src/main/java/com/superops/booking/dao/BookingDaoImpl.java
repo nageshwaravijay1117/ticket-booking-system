@@ -20,7 +20,7 @@ import com.superops.booking.daointerface.BookingDaoInterface;
 public class BookingDaoImpl implements BookingDaoInterface {
 
 	@Autowired
-	DataSource dataSource;
+	private DataSource dataSource;
 
 	@Value("${update.seat.status}")
 	private String updateSeatStatusQuery;
@@ -37,47 +37,8 @@ public class BookingDaoImpl implements BookingDaoInterface {
 	@Value("${update.booking.status}")
 	private String updateBookingStatusQuery;
 
-	@Override
-	public Boolean updateSeatStatus(String seatID, String status) {
-		Connection conn = null;
-		PreparedStatement stmt = null;
-
-		try {
-			conn = DataSourceUtils.getConnection(dataSource);
-			stmt = conn.prepareStatement(updateSeatStatusQuery);
-			stmt.setString(1, status);
-			stmt.setString(2, seatID);
-
-			int rowsAffected = stmt.executeUpdate();
-			if (rowsAffected == 0) {
-				return false;
-			}
-
-//			Closing the resources
-
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-
-		} finally {
-			try {
-				stmt.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return false;
-			}
-			try {
-				conn.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return false;
-			}
-		}
-		return true;
-
-	}
-
+	
+//	Create a new Booking entry in Bookings Table
 	@Override
 	public Boolean insertBookingDetails(BookTicketDB bookTicketDB) {
 		Connection conn = null;
@@ -120,7 +81,8 @@ public class BookingDaoImpl implements BookingDaoInterface {
 		return true;
 
 	}
-
+	
+//	Delete a Booking entry from Bookings Table
 	@Override
 	public void deleteBookingDetails(String bookingID) {
 		Connection conn = null;
@@ -154,6 +116,7 @@ public class BookingDaoImpl implements BookingDaoInterface {
 		}
 	}
 
+//	Get the Booking Status and Seats Reserved from Bookings Table
 	@Override
 	public BookingDetailsDB getBookingStatus(String bookingID) {
 		Connection conn = null;
@@ -202,6 +165,7 @@ public class BookingDaoImpl implements BookingDaoInterface {
 
 	}
 
+//	Update the Status if the Booking ID in Booking Table
 	@Override
 	public Boolean updateBookingStatus(String bookingID, String status) {
 		Connection conn = null;

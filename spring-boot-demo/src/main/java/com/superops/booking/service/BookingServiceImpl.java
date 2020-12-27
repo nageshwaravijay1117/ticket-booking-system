@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.superops.booking.constant.BookingConstants;
 import com.superops.booking.daointerface.BookingCacheDaoInterface;
 import com.superops.booking.daointerface.BookingDaoInterface;
+import com.superops.booking.daointerface.SeatStatusDaoInterface;
 import com.superops.booking.model.BookTicketDB;
 import com.superops.booking.model.BookTicketRequest;
 import com.superops.booking.model.BookTicketResponse;
@@ -23,16 +24,19 @@ import com.superops.booking.utils.UniqueID;
 public class BookingServiceImpl implements BookingServiceInterface {
 
 	@Autowired
-	BookingCacheDaoInterface bookingCacheDaoInterface;
+	private BookingCacheDaoInterface bookingCacheDaoInterface;
 
 	@Autowired
-	BookingDaoInterface bookingDaoInterface;
+	private BookingDaoInterface bookingDaoInterface;
 
 	@Autowired
-	JmsTemplate defaultJmsTemplate;
+	private SeatStatusDaoInterface seatStatusDaoInterface;
 
 	@Autowired
-	UniqueID uniqueID;
+	private JmsTemplate defaultJmsTemplate;
+
+	@Autowired
+	private UniqueID uniqueID;
 
 	@Value("${queue.name}")
 	private String queueName;
@@ -43,12 +47,22 @@ public class BookingServiceImpl implements BookingServiceInterface {
 		ServerResponse serverResponse = null;
 		try {
 			bookTicketResponse = new BookTicketResponse();
-			serverResponse = new ServerResponse("Something Went Wrong! Please Try Again Later", 500);
+			serverResponse = new ServerResponse(BookingConstants.ERROR_RESPONSE,
+					BookingConstants.INTERNAL_SERVER_ERROR);
+
+			String[] seats = bookTicketRequest.getSeatsReserved().split(",");
+//			Validating Maximum Number of Tickets to Be Booked
+			if (seats.length > 6) {
+				serverResponse.setMessage(BookingConstants.MAX_SEAT_LIMIT_ERROR_RESPONSE);
+				serverResponse.setStatusCode(BookingConstants.SUCCESS_RESPONSE_CODE);
+				bookTicketResponse.setServerResponse(serverResponse);
+				return bookTicketResponse;
+			}
 
 //			Adding Seats Into Redis
-			String[] seats = bookTicketRequest.getSeatsReserved().split(",");
+
 			ServerResponse addSeatsServerResponse = addSeatsInRedis(seats);
-			if (addSeatsServerResponse.getStatusCode() != 200) {
+			if (addSeatsServerResponse.getStatusCode() != BookingConstants.SUCCESS_RESPONSE_CODE) {
 				bookTicketResponse.setServerResponse(addSeatsServerResponse);
 				return bookTicketResponse;
 			}
@@ -85,22 +99,25 @@ public class BookingServiceImpl implements BookingServiceInterface {
 		return bookTicketResponse;
 	}
 
+//	Adding Seats In To the Redis Cache
+
 	private ServerResponse addSeatsInRedis(String[] seats) {
 		ServerResponse serverResponse = null;
 		try {
-			serverResponse = new ServerResponse("", 200);
+			serverResponse = new ServerResponse("", BookingConstants.SUCCESS_RESPONSE_CODE);
 			for (String seat : seats) {
-				String seatFromRedis = bookingCacheDaoInterface.getSeatIDFromRedis(seat);
-				if (seat.equals(seatFromRedis)) {
-					serverResponse.setMessage("Seats are Not Available");
-					serverResponse.setStatusCode(204);
-					return serverResponse;
-				} else {
-					Boolean addResponse = bookingCacheDaoInterface.addSeatIDToRedis(seat);
-					if (!addResponse) {
-						serverResponse.setMessage("Something Went Wrong! Please Try Again Later");
-						return serverResponse;
-					}
+//				If seats already exist in cache return false
+				Boolean addResponse = bookingCacheDaoInterface.addSeatIDToRedis(seat);
+				if (!addResponse) {
+					serverResponse.setMessage(BookingConstants.SEAT_NOT_AVAILABLE_ERROR_RESPONSE);
+					serverResponse.setStatusCode(BookingConstants.SEAT_NOT_AVAILABLE_ERROR_CODE);
+					break;
+				}
+			}
+			if (serverResponse.getStatusCode() == BookingConstants.SEAT_NOT_AVAILABLE_ERROR_CODE) {
+//				Removing the previously added keys
+				for (String seat : seats) {
+					bookingCacheDaoInterface.deleteSeatIDFromRedis(seat);
 				}
 			}
 		} catch (Exception e) {
@@ -123,29 +140,32 @@ public class BookingServiceImpl implements BookingServiceInterface {
 			bookTicketDB.setSeatsReserved(bookTicketRequest.getSeatsReserved());
 			bookTicketDB.setShowDetailID(bookTicketRequest.getShowDetailID());
 		} catch (Exception e) {
-			// TODO: handle exception
+//			Execpetion will be logged with request
 
 		}
 		return bookTicketDB;
 	}
 
+//	Mock Function for Payment
 	@Override
 	public ServerResponse makePayment() {
-		ServerResponse response = new ServerResponse("Payment Failed", 400);
+		ServerResponse response = new ServerResponse(BookingConstants.PAYMENT_FAILURE_RESPONSE,
+				BookingConstants.FAILURE_RESPONSE_CODE);
 		Random random = new Random();
 		if (random.nextBoolean()) {
-			response.setStatusCode(200);
-			response.setMessage("Payment Successful");
+			response.setStatusCode(BookingConstants.SUCCESS_RESPONSE_CODE);
+			response.setMessage(BookingConstants.PAYMENT_SUCCESS_RESPONSE);
 		}
 		return response;
 	}
 
+//	Updates the seat status in the My sql CINEMA_HALL_SEAT_STATUS table
 	@Override
 	public Boolean updateSeatStatus(String seatsReserved, String status) {
 		try {
 			String[] seats = seatsReserved.split(",");
 			for (String seatID : seats) {
-				Boolean updateSeatStatus = bookingDaoInterface.updateSeatStatus(seatID, status);
+				Boolean updateSeatStatus = seatStatusDaoInterface.updateSeatStatus(seatID, status);
 				if (!updateSeatStatus) {
 					// Logs will be added for failed update with seat id
 					return false;
@@ -159,18 +179,24 @@ public class BookingServiceImpl implements BookingServiceInterface {
 		return true;
 	}
 
+//	Update the Booking Status on the final booking stage
 	@Override
 	public ServerResponse confirmBookingStatus(ConfirmBookingRequest confirmBookingRequest) {
 		ServerResponse serverResponse = null;
 		try {
-			serverResponse = new ServerResponse("Something Went Wrong! Please Try Again Later", 500);
+			serverResponse = new ServerResponse(BookingConstants.ERROR_RESPONSE,
+					BookingConstants.INTERNAL_SERVER_ERROR);
 			if (confirmBookingRequest.getBookingStatus()) {
+
+//				Update the Booking Status if payment is true
 				Boolean updateBookingStatus = bookingDaoInterface.updateBookingStatus(
 						confirmBookingRequest.getBookingID(), BookingConstants.BOOKING_CONFIRMED_STATUS);
 				if (!updateBookingStatus) {
 					return serverResponse;
 				}
 			} else {
+
+//				Change the status of the seats in pending state
 				BookingDetailsDB bookingDetailsDB = bookingDaoInterface
 						.getBookingStatus(confirmBookingRequest.getBookingID());
 				if (bookingDetailsDB.getSeatsReserved().length() > 0
@@ -181,8 +207,14 @@ public class BookingServiceImpl implements BookingServiceInterface {
 						return serverResponse;
 					}
 				} else {
-					serverResponse.setMessage("Invalid Booking ID");
-					serverResponse.setStatusCode(200);
+					serverResponse.setMessage(BookingConstants.INVALID_BOOKING_ID_ERROR_RESPONSE);
+					serverResponse.setStatusCode(BookingConstants.SUCCESS_RESPONSE_CODE);
+					return serverResponse;
+				}
+//				Update the status of Booking id as failed
+				Boolean updateBookingStatus = bookingDaoInterface.updateBookingStatus(
+						confirmBookingRequest.getBookingID(), BookingConstants.BOOKING_FAILED_STATUS);
+				if (!updateBookingStatus) {
 					return serverResponse;
 				}
 
@@ -192,8 +224,8 @@ public class BookingServiceImpl implements BookingServiceInterface {
 			// TODO: handle exception
 			return serverResponse;
 		}
-		serverResponse.setMessage("Booked Successfully");
-		serverResponse.setStatusCode(200);
+		serverResponse.setMessage(BookingConstants.BOOKING_SUCCESS_RESPONSE);
+		serverResponse.setStatusCode(BookingConstants.SUCCESS_RESPONSE_CODE);
 		return serverResponse;
 	}
 }

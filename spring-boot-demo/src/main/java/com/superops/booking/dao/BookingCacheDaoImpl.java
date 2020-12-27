@@ -14,22 +14,24 @@ public class BookingCacheDaoImpl implements BookingCacheDaoInterface {
 	@Autowired
 	private StringRedisTemplate stringRedisTemplate;
 
+//	Add seat to Redis if SeatID is not already present
 	@Override
 	public Boolean addSeatIDToRedis(String seatID) {
-		Boolean result = false;
-		try {
-			stringRedisTemplate.opsForValue().setIfAbsent(seatID, seatID);
-			stringRedisTemplate.expire(seatID, 120, TimeUnit.SECONDS);
-			result = true;
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-		return result;
+		Boolean setStatus = false;
+		setStatus = stringRedisTemplate.opsForValue().setIfAbsent(seatID, seatID, 120, TimeUnit.SECONDS);
+		return setStatus;
 	}
 
+//	Get value of the provided key
 	@Override
 	public String getSeatIDFromRedis(String seatID) {
 		return stringRedisTemplate.opsForValue().get(seatID);
+	}
+
+//	Delete key from Redis
+	@Override
+	public Boolean deleteSeatIDFromRedis(String seatID) {
+		return stringRedisTemplate.delete(seatID);
 	}
 
 }

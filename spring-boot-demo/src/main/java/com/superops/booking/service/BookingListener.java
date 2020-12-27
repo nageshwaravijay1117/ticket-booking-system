@@ -22,16 +22,19 @@ public class BookingListener {
 	public void ValidateBooking(String bookingID) {
 		try {
 			BookingDetailsDB bookingDetailsDB = bookingDaoInterface.getBookingStatus(bookingID);
+//			Validating the Booking ID 
 			if (bookingDetailsDB.getSeatsReserved().length() > 0
 					&& bookingDetailsDB.getBookingStatus().length() > 0) {
 //				Log Invalid Booking ID with booking id
 			}
+//			Update Status of Booking ID as Failed if Status is not CONFIRMED
 			if (!bookingDetailsDB.getBookingStatus().equals(BookingConstants.BOOKING_CONFIRMED_STATUS)) {
 				Boolean updateOperationStatus = bookingDaoInterface.updateBookingStatus(bookingID,
 						BookingConstants.BOOKING_FAILED_STATUS);
 				if (!updateOperationStatus) {
 //				Logs will be added for failed update with booking id	
 				}
+//				Reset The Seats Status as AVAILABLE
 				Boolean updateSeatStatus = bookingServiceInterface.updateSeatStatus(bookingDetailsDB.getBookingStatus(),
 						BookingConstants.SEAT_AVAILABLE_STATUS);
 				if (!updateSeatStatus) {

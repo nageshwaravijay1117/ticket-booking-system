@@ -1,8 +1,7 @@
-package com.superops.user.dao;
+package com.superops.booking.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
@@ -12,34 +11,32 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Repository;
 
-import com.superops.user.daointerface.UserDaoInterface;
+import com.superops.booking.daointerface.SeatStatusDaoInterface;
 
 @Repository
-public class UserDao implements UserDaoInterface {
+public class SeatStatusDaoImpl implements SeatStatusDaoInterface {
 
 	@Autowired
 	private DataSource dataSource;
 
-	@Value("${select.user}")
-	private String loginQuery;
+	@Value("${update.seat.status}")
+	private String updateSeatStatusQuery;
 
-//	Get the uuid of the customer from the userid and password
+//	Updates the seat status in the CINEMA_HALL_SEAT_STATUS table
 	@Override
-	public String validateUser(String userID, String password) {
-		String uuid = "";
+	public Boolean updateSeatStatus(String seatID, String status) {
 		Connection conn = null;
 		PreparedStatement stmt = null;
-		ResultSet resultSet=null;
 
 		try {
 			conn = DataSourceUtils.getConnection(dataSource);
-			stmt = conn.prepareStatement(loginQuery);
-			stmt.setString(1, userID);
-			stmt.setString(2, password);
+			stmt = conn.prepareStatement(updateSeatStatusQuery);
+			stmt.setString(1, status);
+			stmt.setString(2, seatID);
 
-			resultSet = stmt.executeQuery();
-			while (resultSet.next()) {
-				uuid = resultSet.getString("CUSTOMER_ID");
+			int rowsAffected = stmt.executeUpdate();
+			if (rowsAffected == 0) {
+				return false;
 			}
 
 //			Closing the resources
@@ -49,25 +46,22 @@ public class UserDao implements UserDaoInterface {
 
 		} finally {
 			try {
-				resultSet.close();
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			try {
 				stmt.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				return false;
 			}
 			try {
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				return false;
 			}
 		}
-		return uuid;
+		return true;
+
 	}
 
 }

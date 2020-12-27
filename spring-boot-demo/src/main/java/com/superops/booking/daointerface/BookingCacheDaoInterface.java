@@ -4,4 +4,5 @@ public interface BookingCacheDaoInterface {
 
 	Boolean addSeatIDToRedis(String seatID);
 	String getSeatIDFromRedis(String seatID);
+	Boolean deleteSeatIDFromRedis(String seatID);
 }

@@ -14,7 +14,7 @@ import com.superops.user.service.UserService;
 public class AuthorizationInterceptor implements HandlerInterceptor {
 
 	@Autowired
-	UserService userService;
+	private UserService userService;
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -24,6 +24,8 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
 		token = request.getHeader("Authorization");
 		encodedPassword = userService.getEncodedPassword(token);
+
+		// validate the username and password
 		auth = userService.validateUser(encodedPassword);
 		if (!auth) {
 			response.getWriter().write("{ \"Error\": \"Invalid Token\"}");
@@ -38,7 +40,6 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
 			ModelAndView modelAndView) throws Exception {
 		// TODO Auto-generated method stub
-		System.out.println("inside the post");
 
 	}
 
@@ -46,7 +47,6 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
 			throws Exception {
 		// TODO Auto-generated method stub
-		System.out.println("inside the agter");
 
 	}
 

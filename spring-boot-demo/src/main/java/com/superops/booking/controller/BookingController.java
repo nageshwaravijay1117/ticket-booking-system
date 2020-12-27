@@ -20,7 +20,7 @@ import com.superops.booking.serviceinterface.BookingServiceInterface;
 public class BookingController {
 
 	@Autowired
-	BookingServiceInterface bookingServiceInterface;
+	private BookingServiceInterface bookingServiceInterface;
 
 //	The Initial Booking Request Reaches here
 
@@ -36,7 +36,8 @@ public class BookingController {
 		}
 		return new ResponseEntity<BookTicketResponse>(response, HttpStatus.OK);
 	}
-	
+
+//	API for making the payment
 	@GetMapping("make-payment")
 	public ResponseEntity<ServerResponse> makePayment() {
 
@@ -49,7 +50,8 @@ public class BookingController {
 		}
 		return new ResponseEntity<ServerResponse>(response, HttpStatus.OK);
 	}
-	
+
+//	API for confirming the booking
 	@PostMapping("confirm-booking")
 	public ResponseEntity<ServerResponse> confirmBooking(@RequestBody ConfirmBookingRequest confirmBookingRequest) {
 
@@ -62,7 +64,5 @@ public class BookingController {
 		}
 		return new ResponseEntity<ServerResponse>(response, HttpStatus.OK);
 	}
-	
 
-	
 }

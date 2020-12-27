@@ -11,14 +11,16 @@ import com.superops.user.dao.UserDao;
 public class UserService {
 
 	@Autowired
-	UserDao userDao;
+	private UserDao userDao;
 
+//	Extract the encoded password from Authorization Header
 	public String getEncodedPassword(String token) {
 		String[] tokenArr = token.split(" ");
 		String encodedPassword = tokenArr[1];
 		return encodedPassword;
 	}
 
+//	Validate the User Login from Customer Table
 	public Boolean validateUser(String token) {
 		Boolean validUser = false;
 		try {
