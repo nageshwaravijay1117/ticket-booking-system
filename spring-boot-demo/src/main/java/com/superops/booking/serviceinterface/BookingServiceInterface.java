@@ -13,6 +13,6 @@ public interface BookingServiceInterface {
 
 	ServerResponse confirmBookingStatus(ConfirmBookingRequest confirmBookingRequest);
 
-	Boolean updateSeatStatus(String seatsReserved, String status);
+	boolean updateSeatStatus(String seatsReserved, String status);
 
 }

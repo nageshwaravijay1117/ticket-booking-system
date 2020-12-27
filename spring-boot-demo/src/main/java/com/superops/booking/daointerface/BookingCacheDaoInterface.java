@@ -2,7 +2,7 @@ package com.superops.booking.daointerface;
 
 public interface BookingCacheDaoInterface {
 
-	Boolean addSeatIDToRedis(String seatID);
+	boolean addSeatIDToRedis(String seatID);
 	String getSeatIDFromRedis(String seatID);
-	Boolean deleteSeatIDFromRedis(String seatID);
+	boolean deleteSeatIDFromRedis(String seatID);
 }

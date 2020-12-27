@@ -5,11 +5,11 @@ import com.superops.booking.model.BookingDetailsDB;
 
 public interface BookingDaoInterface {
 
-	Boolean insertBookingDetails(BookTicketDB bookTicketDB);
+	boolean insertBookingDetails(BookTicketDB bookTicketDB);
 
 	void deleteBookingDetails(String bookingID);
 
 	BookingDetailsDB getBookingStatus(String bookingID);
 
-	Boolean updateBookingStatus(String bookingID, String status);
+	boolean updateBookingStatus(String bookingID, String status);
 }

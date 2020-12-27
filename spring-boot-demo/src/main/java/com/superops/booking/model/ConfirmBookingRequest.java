@@ -1,7 +1,7 @@
 package com.superops.booking.model;
 
 public class ConfirmBookingRequest {
-	private Boolean bookingStatus;
+	private boolean bookingStatus;
 	private String bookingID;
 
 	public Boolean getBookingStatus() {

@@ -24,7 +24,7 @@ public class SeatStatusDaoImpl implements SeatStatusDaoInterface {
 
 //	Updates the seat status in the CINEMA_HALL_SEAT_STATUS table
 	@Override
-	public Boolean updateSeatStatus(String seatID, String status) {
+	public boolean updateSeatStatus(String seatID, String status) {
 		Connection conn = null;
 		PreparedStatement stmt = null;
 

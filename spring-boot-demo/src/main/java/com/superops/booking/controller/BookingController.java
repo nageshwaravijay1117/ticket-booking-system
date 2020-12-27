@@ -57,7 +57,7 @@ public class BookingController {
 
 		ServerResponse response = null;
 		try {
-			response = bookingServiceInterface.makePayment();
+			response = bookingServiceInterface.confirmBookingStatus(confirmBookingRequest);
 
 		} catch (Exception e) {
 			return new ResponseEntity<ServerResponse>(response, HttpStatus.INTERNAL_SERVER_ERROR);

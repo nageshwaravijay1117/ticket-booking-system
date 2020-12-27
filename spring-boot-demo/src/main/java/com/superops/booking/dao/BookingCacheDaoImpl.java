@@ -16,8 +16,8 @@ public class BookingCacheDaoImpl implements BookingCacheDaoInterface {
 
 //	Add seat to Redis if SeatID is not already present
 	@Override
-	public Boolean addSeatIDToRedis(String seatID) {
-		Boolean setStatus = false;
+	public boolean addSeatIDToRedis(String seatID) {
+		boolean setStatus = false;
 		setStatus = stringRedisTemplate.opsForValue().setIfAbsent(seatID, seatID, 120, TimeUnit.SECONDS);
 		return setStatus;
 	}
@@ -30,7 +30,7 @@ public class BookingCacheDaoImpl implements BookingCacheDaoInterface {
 
 //	Delete key from Redis
 	@Override
-	public Boolean deleteSeatIDFromRedis(String seatID) {
+	public boolean deleteSeatIDFromRedis(String seatID) {
 		return stringRedisTemplate.delete(seatID);
 	}
 

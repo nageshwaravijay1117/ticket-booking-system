@@ -40,7 +40,7 @@ public class BookingDaoImpl implements BookingDaoInterface {
 	
 //	Create a new Booking entry in Bookings Table
 	@Override
-	public Boolean insertBookingDetails(BookTicketDB bookTicketDB) {
+	public boolean insertBookingDetails(BookTicketDB bookTicketDB) {
 		Connection conn = null;
 		PreparedStatement stmt = null;
 
@@ -167,7 +167,7 @@ public class BookingDaoImpl implements BookingDaoInterface {
 
 //	Update the Status if the Booking ID in Booking Table
 	@Override
-	public Boolean updateBookingStatus(String bookingID, String status) {
+	public boolean updateBookingStatus(String bookingID, String status) {
 		Connection conn = null;
 		PreparedStatement stmt = null;
 

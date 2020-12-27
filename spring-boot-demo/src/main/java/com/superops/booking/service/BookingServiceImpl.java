@@ -70,13 +70,13 @@ public class BookingServiceImpl implements BookingServiceInterface {
 //			Creating Booking Entry in Bookings Table
 			BookTicketDB bookTicketDB = convertBookTicketReqToBookTicketDB(bookTicketRequest);
 
-			Boolean insertBookingResponse = bookingDaoInterface.insertBookingDetails(bookTicketDB);
+			boolean insertBookingResponse = bookingDaoInterface.insertBookingDetails(bookTicketDB);
 			if (!insertBookingResponse) {
 				bookTicketResponse.setServerResponse(serverResponse);
 				return bookTicketResponse;
 			}
 //			Updating Seats Available Table
-			Boolean updateSeatsResponse = updateSeatStatus(bookTicketDB.getSeatsReserved(),
+			boolean updateSeatsResponse = updateSeatStatus(bookTicketDB.getSeatsReserved(),
 					BookingConstants.SEAT_PENDING_STATUS);
 			if (!updateSeatsResponse) {
 				bookingDaoInterface.deleteBookingDetails(bookTicketDB.getBookingID());
@@ -107,7 +107,7 @@ public class BookingServiceImpl implements BookingServiceInterface {
 			serverResponse = new ServerResponse("", BookingConstants.SUCCESS_RESPONSE_CODE);
 			for (String seat : seats) {
 //				If seats already exist in cache return false
-				Boolean addResponse = bookingCacheDaoInterface.addSeatIDToRedis(seat);
+				boolean addResponse = bookingCacheDaoInterface.addSeatIDToRedis(seat);
 				if (!addResponse) {
 					serverResponse.setMessage(BookingConstants.SEAT_NOT_AVAILABLE_ERROR_RESPONSE);
 					serverResponse.setStatusCode(BookingConstants.SEAT_NOT_AVAILABLE_ERROR_CODE);
@@ -161,11 +161,11 @@ public class BookingServiceImpl implements BookingServiceInterface {
 
 //	Updates the seat status in the My sql CINEMA_HALL_SEAT_STATUS table
 	@Override
-	public Boolean updateSeatStatus(String seatsReserved, String status) {
+	public boolean updateSeatStatus(String seatsReserved, String status) {
 		try {
 			String[] seats = seatsReserved.split(",");
 			for (String seatID : seats) {
-				Boolean updateSeatStatus = seatStatusDaoInterface.updateSeatStatus(seatID, status);
+				boolean updateSeatStatus = seatStatusDaoInterface.updateSeatStatus(seatID, status);
 				if (!updateSeatStatus) {
 					// Logs will be added for failed update with seat id
 					return false;
@@ -189,7 +189,7 @@ public class BookingServiceImpl implements BookingServiceInterface {
 			if (confirmBookingRequest.getBookingStatus()) {
 
 //				Update the Booking Status if payment is true
-				Boolean updateBookingStatus = bookingDaoInterface.updateBookingStatus(
+				boolean updateBookingStatus = bookingDaoInterface.updateBookingStatus(
 						confirmBookingRequest.getBookingID(), BookingConstants.BOOKING_CONFIRMED_STATUS);
 				if (!updateBookingStatus) {
 					return serverResponse;
@@ -201,7 +201,7 @@ public class BookingServiceImpl implements BookingServiceInterface {
 						.getBookingStatus(confirmBookingRequest.getBookingID());
 				if (bookingDetailsDB.getSeatsReserved().length() > 0
 						&& bookingDetailsDB.getBookingStatus().length() > 0) {
-					Boolean updateSeatsResponse = updateSeatStatus(bookingDetailsDB.getSeatsReserved(),
+					boolean updateSeatsResponse = updateSeatStatus(bookingDetailsDB.getSeatsReserved(),
 							BookingConstants.SEAT_AVAILABLE_STATUS);
 					if (!updateSeatsResponse) {
 						return serverResponse;
@@ -212,7 +212,7 @@ public class BookingServiceImpl implements BookingServiceInterface {
 					return serverResponse;
 				}
 //				Update the status of Booking id as failed
-				Boolean updateBookingStatus = bookingDaoInterface.updateBookingStatus(
+				boolean updateBookingStatus = bookingDaoInterface.updateBookingStatus(
 						confirmBookingRequest.getBookingID(), BookingConstants.BOOKING_FAILED_STATUS);
 				if (!updateBookingStatus) {
 					return serverResponse;
